@@ -1,13 +1,13 @@
 #[repr(align(16))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Vec2([f32; 4]);
 
 #[repr(align(16))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Vec3([f32; 4]);
 
 #[repr(align(16))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Vec4([f32; 4]);
 
 impl Vec2 {
