@@ -232,4 +232,317 @@ mod impls {
             }
         }
     }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    pub mod x86_64 {
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::*;
+        #[cfg(target_arch = "x86_64")]
+        use core::arch::x86_64::*;
+
+        pub const AVX_IMPL_INS: AVXImpl = AVXImpl();
+
+        pub struct AVXImpl();
+
+        impl super::MatImpl for AVXImpl {
+            #[target_feature(enable = "sse")]
+            unsafe fn add_mat2(&self, a: &mut [f32; 4], b: &[f32; 4]) {
+                let xmm_0 = [
+                    _mm_load_ps(a.as_ptr()),
+                    _mm_load_ps(b.as_ptr()),
+                ];
+                let xmm_1 = _mm_add_ps(xmm_0[0], xmm_0[1]);
+                _mm_store_ps(a.as_mut_ptr(), xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn add_mat3(&self, a: &mut [f32; 9], b: &[f32; 9]) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(b.as_ptr())
+                ];
+                let ymm_1 = _mm256_add_ps(ymm_0[0], ymm_0[1]);
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1);
+                let xmm_0 = [
+                    _mm_load_ss(*a[8]),
+                    _mm_load_ss(*b[8]),
+                ];
+                let xmm_1 = _mm_add_ps(xmm_0[0], xmm[1]);
+                _mm_store_ss(*a[8], xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn add_mat4(&self, a: &mut [f32; 16], b: &[f32; 16]) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(a[8..].as_ptr()),
+                    _mm256_load_ps(b.as_ptr()),
+                    _mm256_load_ps(b[8..].as_ptr()),
+                ];
+                let ymm_1 = [
+                    _mm256_add_ps(ymm_0[0], ymm_0[2]),
+                    _mm256_add_ps(ymm_0[1], ymm_0[3]),
+                ];
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1[0]);
+                _mm256_store_ps(a[8..].as_mut_ptr(), ymm_1[1]);
+            }
+
+            #[target_feature(enable = "sse")]
+            unsafe fn sub_mat2(&self, a: &mut [f32; 4], b: &[f32; 4]) {
+                let xmm_0 = [
+                    _mm_load_ps(a.as_ptr()),
+                    _mm_load_ps(b.as_ptr()),
+                ];
+                let xmm_1 = _mm_sub_ps(xmm_0[0], xmm_0[1]);
+                _mm_store_ps(a.as_mut_ptr(), xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn sub_mat3(&self, a: &mut [f32; 9], b: &[f32; 9]) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(b.as_ptr())
+                ];
+                let ymm_1 = _mm256_sub_ps(ymm_0[0], ymm_0[1]);
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1);
+                let xmm_0 = [
+                    _mm_load_ss(*a[8]),
+                    _mm_load_ss(*b[8]),
+                ];
+                let xmm_1 = _mm_sub_ps(xmm_0[0], xmm[1]);
+                _mm_store_ss(*a[8], xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn sub_mat4(&self, a: &mut [f32; 16], b: &[f32; 16]) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(a[8..].as_ptr()),
+                    _mm256_load_ps(b.as_ptr()),
+                    _mm256_load_ps(b[8..].as_ptr()),
+                ];
+                let ymm_1 = [
+                    _mm256_sub_ps(ymm_0[0], ymm_0[2]),
+                    _mm256_sub_ps(ymm_0[1], ymm_0[3]),
+                ];
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1[0]);
+                _mm256_store_ps(a[8..].as_mut_ptr(), ymm_1[1]);
+            }
+
+            #[target_feature(enable = "sse")]
+            unsafe fn mul_f32_mat2(&self, a: &mut [f32; 4], b: f32) {
+                let xmm_0 = [
+                    _mm_load_ps(a.as_ptr()),
+                    _mm_set1_ps(b),
+                ];
+                let xmm_1 = _mm_mul_ps(xmm_0[0], x_mm[1]);
+                _mm_store_ps(a.as_mut_ptr(), xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn mul_f32_mat3(&self, a: &mut [f32; 9], b: f32) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_set1_ps(b),
+                ];
+                let ymm_1 = _mm256_mul_ps(ymm_0[0], ymm_0[1]);
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1);
+                let xmm_0 = [
+                    _mm_load_ss(*a[8]),
+                    _mm_load_ss(*b)
+                ];
+                let xmm_1 = _mm_mul_ps(xmm_0[0], xmm_0[1]);
+                _mm_store_ss(*a[8], xmm_1);
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn mul_f32_mat4(&self, a: &mut [f32; 16], b: f32) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(a[8..].as_ptr()),
+                    _mm256_set1_ps(b),
+                ];
+                let ymm_1 = [
+                    _mm256_mul_ps(ymm_0[0], ymm_0[2]),
+                    _mm256_mul_ps(ymm_0[1], ymm_0[2]),
+                ];
+                _mm256_store_ps(a.as_mut_ptr(), ymm_1[0]);
+                _mm256_store_ps(a[8..].as_mut_ptr(), ymm_1[1]);
+            }
+
+            unsafe fn mul_vec2_mat2(&self, a: &[f32; 4], b: &mut [f32; 4]) {
+                unimplemented!()
+            }
+
+            unsafe fn mul_vec3_mat3(&self, a: &[f32; 4], b: &mut [f32; 4]) {
+                unimplemented!()
+            }
+
+            unsafe fn mul_vec4_mat4(&self, a: &[f32; 4], b: &mut [f32; 4]) {
+                unimplemented!()
+            }
+
+            unsafe fn mul_mat2_mat2(&self, a: &mut [f32; 4], b: &[f32; 4]) {
+                unimplemented!()
+            }
+
+            unsafe fn mul_mat3_mat3(&self, a: &mut [f32; 9], b: &[f32; 9]) {
+                unimplemented!()
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn mul_mat4_mat4(&self, a: &mut [f32; 16], b: &[f32; 16]) {
+                let ymm_0 = [
+                    _mm256_load_ps(a.as_ptr()),
+                    _mm256_load_ps(a[8..].as_ptr()),
+                    _mm256_load_ps((b.as_ptr())),
+                    _mm256_load_ps(b[8..].as_ptr()),
+                ];
+                let ymm_1 = [
+                    _mm256_shuffle_ps(ymm_0[0], ymm_0[0], 0x00),
+                    _mm256_shuffle_ps(ymm_0[1], ymm_0[1], 0x00),
+                    _mm256_permute2f128_ps(ymm_b[2], ymm_b[2], 0x00),
+                ];
+                let ymm_2 = [
+                    _mm256_mul_ps(ymm_1[0], ymm_1[2]),
+                    _mm256_mul_ps(ymm_1[1], ymm_1[2]),
+                ];
+                let ymm_3 = [
+                    _mm256_shuffle_ps(ymm_0[0], ymm_0[0], 0x55),
+                    _mm256_shuffle_ps(ymm_0[1], ymm_0[1], 0x55),
+                    _mm256_permute2f128_ps(ymm_0[2], ymm_0[2], 0x11),
+                ];
+                let ymm_4 = [
+                    _mm256_add_ps(_mm256_mul_ps(ymm_3[0], ymm_3[2]), ymm_2[0]),
+                    _mm256_add_ps(_mm256_mul_ps(ymm_3[1], ymm_3[2]), ymm_2[1]),
+                ];
+                let ymm_5 = [
+                    _mm256_shuffle_ps(ymm_0[0], ymm_0[0], 0xAA),
+                    _mm256_shuffle_ps(ymm_0[1], ymm_0[1], 0xAA),
+                    _mm256_permute2f128_ps(ymm_0[3], ymm_0[3], 0x00),
+                ];
+                let ymm_6 = [
+                    _mm256_add_ps(_mm256_mul_ps(ymm_5[0], ymm_5[2]), ymm_4[0]),
+                    _mm256_add_ps(_mm256_mul_ps(ymm_5[1], ymm_5[2]), ymm_4[1]),
+                ];
+                let ymm_7 = [
+                    _mm256_shuffle_ps(ymm_0[0], ymm_0[0], 0xFF),
+                    _mm256_shuffle_ps(ymm_0[1], ymm_0[1], 0xFF),
+                    _mm256_permute2f128_ps(ymm_0[3], ymm_0[3], 0x11),
+                ];
+                let ymm_8 = [
+                    _mm256_add_ps(_mm256_mul_ps(ymm_7[0], ymm_7[2]), ymm_6[0]),
+                    _mm256_add_ps(_mm256_mul_ps(ymm_7[1], ymm_7[2]), ymm_6[1]),
+                ];
+                _mm256_store_ps(a.as_mut_ptr(), ymm_8[0]);
+                _mm256_store_ps(a[8..].as_mut_ptr(), ymm_8[1]);
+            }
+
+            unsafe fn transpose_mat2(&self, a: &mut [f32; 4]) {
+                unimplemented!()
+            }
+
+            unsafe fn transpose_mat3(&self, a: &mut [f32; 9]) {
+                unimplemented!()
+            }
+
+            #[target_feature(enable = "sse")]
+            unsafe fn transpose_mat4(&self, a: &mut [f32; 16]) {
+                let mut xmm_0 = [
+                    _mm_load_ps(a.as_ptr()),
+                    _mm_load_ps(a[4..].as_ptr()),
+                    _mm_load_ps(a[8..].as_ptr()),
+                    _mm_load_ps(a[12..].as_ptr()),
+                ];
+                _MM_TRANSPOSE4_PS(&mut xmm_0[0], &mut xmm_0[1], &mut xmm_0[2], &mut xmm_0[3]);
+                _mm_store_ps(a.as_mut_ptr(), xmm_0[0]);
+                _mm_store_ps(a[4..].as_mut_ptr(), xmm_0[1]);
+                _mm_store_ps(a[8..].as_mut_ptr(), xmm_0[2]);
+                _mm_store_ps(a[12..].as_mut_ptr(), xmm_0[3]);
+            }
+
+            unsafe fn det_mat2(&self, a: &[f32; 4]) -> f32 {
+                unimplemented!()
+            }
+
+            unsafe fn det_mat3(&self, a: &[f32; 9]) -> f32 {
+                unimplemented!()
+            }
+
+            #[target_feature(enable = "avx")]
+            unsafe fn det_mat4(&self, a: &[f32; 16]) -> f32 {
+                #[repr(align(32))]
+                struct VecRs([f32; 8]);
+                let xmm_0 = [
+                    _mm_load_ps(a.as_ptr()),
+                    _mm_load_ps(a[4..].as_ptr()),
+                    _mm_load_ps(a[8..].as_ptr()),
+                    _mm_load_ps(a[12..].as_ptr()),
+                ];
+                let ymm_0 = [
+                    _mm256_set_m128(xmm_0[0], xmm_0[0]),
+                    _mm256_set_m128(xmm_0[1], xmm_0[1]),
+                    _mm256_set_m128(xmm_0[2], xmm_0[2]),
+                    _mm256_set_m128(xmm_0[3], xmm_0[3]),
+                ];
+                let ymm_1 = [
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[0], 0x40),
+                        _mm256_permute_ps(ymm_0[0], 0x09),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[1], 0xB9),
+                        _mm256_permute_ps(ymm_0[1], 0x0F),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[0], 0xB9),
+                        _mm256_permute_ps(ymm_0[0], 0x0F),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[1], 0x40),
+                        _mm256_permute_ps(ymm_0[1], 0x09),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[2], 0x16),
+                        _mm256_permute_ps(ymm_0[2], 0x00),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[3], 0xEF),
+                        _mm256_permute_ps(ymm_0[3], 0x06),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[2], 0xEF),
+                        _mm256_permute_ps(ymm_0[2], 0x06),
+                        0xF0,
+                    ),
+                    _mm256_blend_ps(
+                        _mm256_permute_ps(ymm_0[3], 0x16),
+                        _mm256_permute_ps(ymm_0[3], 0x00),
+                        0xF0,
+                    ),
+                ];
+                let ymm_2 = [
+                    _mm256_mul_ps(ymm_1[0], ymm_1[1]),
+                    _mm256_mul_ps(ymm_1[2], ymm_1[3]),
+                    _mm256_mul_ps(ymm_1[4], ymm_1[5]),
+                    _mm256_mul_ps(ymm_1[6], ymm_1[7]),
+                ];
+                let ymm_3 = [
+                    _mm256_sub_ps(ymm_2[0], ymm_2[1]),
+                    _mm256_sub_ps(ymm_2[2], ymm_2[3]),
+                ];
+                let ymm_4 = _mm256_mul_ps(ymm_3[0], ymm_3[1]);
+                let mut vec_rs = VecRs([0.0; 8]);
+                _mm256_store_ps(vec_rs.0.as_mut_ptr(), ymm_4);
+                vec_rs.0[0] - vec_rs.0[1] + vec_rs.0[2] + vec_rs.0[3] - vec_rs.0[4]
+                    + vec_rs.0[5]
+            }
+        }
+    }
 }
